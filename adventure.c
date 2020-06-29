@@ -16,6 +16,7 @@ void game(char* path);
 char* getStart(char* rooms[7], char* dirName);
 char* getCurrRoom(FILE* fd);
 char* getCurrConnec(FILE* fd);
+char* getRoomType(FILE* fd);
 
 int main(void){
     //gets the newest directory
@@ -121,8 +122,9 @@ void game(char* path){
 
         strcpy(currConnec, getCurrConnec(fd));
 
-        roomT = strtok(currConnec, "#");
-        roomT = strtok(NULL, "#");
+        roomT = getRoomType(currRoom);
+
+        printf("roomT: %s\n", roomT);
 
         printf("CURRENT LOCATION:%s\n", currRoom);
         printf("POSSIBLE CONNECTIONS:%s\n", currConnec);
@@ -247,6 +249,29 @@ char* getCurrConnec(FILE *fd){
 
         }
     }
-    printf("return route: %s\n", route);
     return route;
+}
+
+//returns the room type of the room file passed in
+char* getRoomType(FILE *fd){
+    char line[256];
+    memset(line, '\0', sizeof(line));
+    char* word;
+    char* type = malloc(sizeof(char)*256);
+    memset(type, '\0', sizeof(route));
+    char next;
+    int count = 0;
+    char* prefix = "ROOM TYPE:";
+
+    while(1){
+        fgets(line, sizeof(line), fd);
+        prefix = strtok(line, ":");
+        word = strtok(NULL, ":");
+
+        if(strcmp(prefix, "ROOM TYPE") == 0){
+            
+            break;
+        }
+    }
+    return type;
 }
