@@ -11,8 +11,21 @@
 #define DIR_PREFIX "duellje.rooms."
 
 char* findNewestDirectory(char* path, char* prefix);
-void createRoomFiles(char* directoryName);
+struct AM** createRooms();
+void createConnections(struct AM** graph);
+void createRoomFiles(struct AM** graph, char* directoryName);
+int connect(struct AM* row, int randRoom);
 
+struct Node {
+    int room; 
+    struct Node* next;
+};
+
+struct AM{
+    int numConnections;
+    int room;
+    struct Node* list;
+};
 
 int main(void){
     srand(time(NULL));
@@ -27,9 +40,25 @@ int main(void){
 
     //enters the new directory
     char* latestRoomDirectory = findNewestDirectory(".", DIR_PREFIX);
-    
-    //creates room files 
-    createRoomFiles(latestRoomDirectory);
+
+    //creates the graph of the rooms
+    struct AM** graph = createRooms();
+
+    struct Node* cur = NULL;
+    for(int i = 0; i < 7; i++){
+        printf("%d: ", graph[i]->room);
+        cur = graph[i]->list;
+        if(cur != NULL){
+            for(int j = 0; j < graph[i]->numConnections; j++){
+                printf("%d, ", cur->room);
+                cur = cur-> next;
+            }
+            printf("\n");
+        }
+    }
+
+    //creates the room files
+    createRoomFiles(graph, latestRoomDirectory);
 
     return 0;
 }
@@ -79,10 +108,6 @@ char* findNewestDirectory(char* path, char* prefix){
         A room name
             each name must be unique and at max 8 characters long 
             only uppercase and lowercase letters are allowed 
-        A room type
-            possible types: START_ROOM, END_ROOM and MID_ROOM
-            each room type is randomly assigned to each room generated
-            only one room will be assigned the start and end room types
         Outbound connections to other rooms 
             must be at least 3 outbound connections 
             max outbound connections is 6 
@@ -90,28 +115,23 @@ char* findNewestDirectory(char* path, char* prefix){
             outbound connections have matching connections coming back
             a room can't have an outbound connection to itself
             a room can't have more than 1 connection to the same room
+        A room type
+            possible types: START_ROOM, END_ROOM and MID_ROOM
+            each room type is randomly assigned to each room generated
+            only one room will be assigned the start and end room types
 */
-void createRoomFiles(char* directoryName){
+void createRoomFiles(struct AM** graph, char* directoryName){
     //list of 10 different room names 
     char *rooms [10] = {"Dungeon", "Basement", "Attic", "Living", "Plant", "Master", "Bath", "Study", "Laundry", "Dining"};
 
     //array to keep track of which room names have been taken (0 is available, 1 room name taken)
-    int roomTaken[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int roomCount = 0;
     int file_descriptor;
+    struct Node* cur = NULL;
+    int roomCount = 0;
 
     //creates 7 room files 
-    while(roomCount < 7){
-        //gets a random number from 0 to 9
-        int randomNum = rand() % 10;
-
-        //checks if the room name has already been taken
-        while(roomTaken[randomNum] == 1){
-            randomNum = rand() % 10;
-        }
-
-        char* room = rooms[randomNum];
-        roomTaken[randomNum] = 1;
+    for(int i = 0; i < 7; i++){
+        char* room = rooms[graph[i]->room];
 
         //creates the file path for each room
         char *filepath = malloc(strlen(directoryName) + strlen(room) + 2);
@@ -136,6 +156,24 @@ void createRoomFiles(char* directoryName){
 
         write(file_descriptor, message, strlen(message));
 
+        //writes the connections to the room file
+        cur = graph[i]->list;
+        if(cur != NULL){
+            for(int i = 0; i < graph[i]->numConnections; i++){
+                while(cur != NULL){
+                char* connection = malloc(15 + strlen(rooms[cur->room]) + 1);
+                char number[50];
+                sprintf(number, "%d", i+1);
+                strcpy(connection, "\nCONNECTION ");
+                strcat(connection, number);
+                strcat(connection, ": ");
+                strcat(connection, rooms[cur->room]);
+
+                write(file_descriptor, connection, strlen(connection));
+                cur = cur->next;
+                }
+            }
+        }
         //writes the room type to the file
         if(roomCount == 0){
             char roomType[] =  "\nROOM TYPE: START_ROOM";
@@ -149,9 +187,115 @@ void createRoomFiles(char* directoryName){
             write(file_descriptor, roomType, strlen(roomType)); 
         }
 
+        roomCount++;
         //closes the file 
         close(file_descriptor);
-
-        roomCount++;
     }
+}
+
+//creates a graph of 7 rooms that are connected to each other by a minium of 3 connections and at most 6 connections
+struct AM** createRooms(){
+    struct AM** graph = malloc(sizeof(struct AM*)*7);
+    struct AM* roomInit = NULL;
+    int roomTaken[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int randRoom = 0;
+    int roomCount = 0;
+
+    while(roomCount < 7){
+        randRoom = rand() % 10;
+        if(roomTaken[randRoom] == 0){
+            roomInit = malloc(sizeof(struct AM));
+            roomInit->numConnections = 0;
+            roomInit->room = randRoom;
+            roomInit->list = NULL;
+            graph[roomCount] = roomInit;
+            roomCount++;
+            roomTaken[randRoom] = 1;
+
+            printf("Room taken #: %d\n", randRoom);
+        }
+    }
+
+    printf("Room taken array: \n");
+    for(int i = 0; i < 10; i++){
+        printf("%d ", roomTaken[i]);
+    }
+    printf("\n");
+
+    createConnections(graph);
+    return graph;
+}
+
+//creates connections between the rooms created
+void createConnections(struct AM** graph){
+    int rooms[7];
+    int randNum = 0;
+    int numConn = 0;
+    int randRoom = 0;
+
+    printf("connections rooms array: \n");
+
+    for(int i = 0; i < 7; i++){
+        rooms[i] = graph[i]->room;
+        printf("%d ", rooms[i]);
+    }
+    printf("\n");
+
+    struct Node* cur;
+
+    for(int j = 0; j < 7; j++){
+        printf("in create Connections\n");
+        numConn = graph[j]->numConnections;
+        printf("numConn: %d\n", numConn);
+        while(numConn < 3){
+            randNum = rand() % 7;
+            randRoom = rooms[randNum];
+            printf("create connections other room: %d\n", randRoom);
+            //checks if the connection is equal to itself or is already a connection
+            if(randRoom != graph[j]->room && connect(graph[j], randRoom)){
+                graph[j]->numConnections++;
+                if(connect(graph[randNum], graph[j]->room)){
+                    graph[randNum]->numConnections++;
+                }
+                numConn++;
+            }
+        }
+    }
+}
+
+//checks if two rooms can be connected
+//returns 1 if the room isn't already in connections otherwise it returns 0
+int connect(struct AM* row, int randRoom){
+    struct Node* cur = row->list;
+    struct Node* prev = NULL;
+    struct Node* newNode = malloc(sizeof(struct Node));
+
+    printf("in connect - connecting room #%d\n", row->room);
+    printf("second Room: %d\n", randRoom);
+
+    //checks if this is the first link in the list
+    if(cur == NULL){
+        printf("first link\n");
+        newNode->next = NULL;
+        newNode->room = randRoom;
+        row->list = newNode;
+        return 1;
+    }
+
+    //checks if the room is already connected
+    while(cur != NULL){
+        if(cur->room == randRoom){
+            return 0;
+        }
+        printf("other links\n");
+        prev = cur;
+        cur = cur->next;
+    }
+
+    //adds room to the end of the list
+    newNode->next = NULL;
+    newNode->room = randRoom;
+    prev->next = newNode;
+
+    return 1;
 }
