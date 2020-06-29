@@ -14,7 +14,8 @@
 char* findNewestDirectory(char* path, char* prefix);
 void game(char* path);
 char* getStart(char* rooms[7], char* dirName);
-void printfile(char* dirName, char* roomName);
+char* getCurrRoom(FILE* fd);
+char* getCurrConnec(FILE* fd);
 
 int main(void){
     //gets the newest directory
@@ -66,6 +67,16 @@ char* findNewestDirectory(char* path, char* prefix){
 //starts the adventure game 
 void game(char* path){
     char *files [9];
+    FILE *fd;
+    int numMoves = 0;
+    char currRoom[20];
+    char currConnec[256];
+    memset(currConnec, '\0', sizeof(currConnec));
+    char roomPath[100];
+    char nextRoom[30];
+    char *roomT = "";
+    int error;
+
     //opens the directory and copies the room names into the rooms array
     DIR* currDir = opendir(path);
     struct dirent *ent;
@@ -86,9 +97,67 @@ void game(char* path){
     }
 
     char* start = getStart(rooms, path);
-    printf("CURRENT LOCATION: %s\n", start);
-    printf("POSSIBLE CONNECTIONS: ");
-    printfile(path, start);
+    
+    //opens the start room file
+    char *filePath = malloc(strlen(path) + strlen(start)+2);
+    path = strcat(path, "/");
+    filePath = strcpy(filePath, path);
+    filePath = strcat(filePath, start);
+    fd = fopen(filePath, "r");
+
+    //checks that the file open correctly
+    if(fd == NULL){
+        printf("in game\n");
+        printf("open() failed on %s\n", filePath);
+        perror("Error");
+        exit(1);
+    }
+
+    //makes the start room to the current room
+    strcpy(currRoom, start);
+
+
+        strcpy(currRoom, getCurrRoom(fd));
+
+        strcpy(currConnec, getCurrConnec(fd));
+
+        roomT = strtok(currConnec, "#");
+        roomT = strtok(NULL, "#");
+
+        printf("CURRENT LOCATION:%s\n", currRoom);
+        printf("POSSIBLE CONNECTIONS:%s\n", currConnec);
+        printf("WHERE TO? >");
+        scanf("%s", nextRoom);
+
+
+    // while(strncmp("END_ROOM", roomT, sizeof(roomT)) != 0){
+    //     printf("top of while\n");
+
+        // strcpy(currRoom, getCurrRoom(fd));
+        // printf("currRoom: %s\n", currRoom);
+
+        // strcpy(currConnec, getCurrConnec(fd));
+        // printf("currConnec: %s\n", currConnec);
+
+        // roomT = strtok(currConnec, "#");
+        // roomT = strtok(NULL, "#");
+
+        // if(strncmp("END_ROOM", roomT, sizeof(roomT)) == 0){
+        //     break;
+        // }
+
+        // do{
+        // printf("CURRENT LOCATION: %s\n", currRoom);
+        // printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
+        // printf("WHERE TO? >");
+        // scanf("%s", nextRoom);
+        // error = checkIfValid(nextRoom, currConnec);
+        // if(error == 1){
+        //     printf("\n HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN \n");
+        // }
+
+        // }while(error == 1);
+    //}
 
 
 }
@@ -132,7 +201,52 @@ char* getStart(char* rooms[7], char* dirName){
     return start;
 }
 
-//prints information from the file in the correct format for the interface 
-void printfile(char* dirName, char* roomName){
-    
+
+//returns the name of the room the user is currently in
+char* getCurrRoom(FILE* fd){
+    char line[256];
+    char* word;
+    fgets(line, sizeof(line), fd);
+    word = strtok(line, ":");
+    word = strtok(NULL, "");
+    word[strcspn(word, "\n")] = 0;
+
+    return word;
+}
+
+//returns the names of the connections for the room file passed in as the argument 
+char* getCurrConnec(FILE *fd){
+    char line[256];
+    memset(line, '\0', sizeof(line));
+    char* word;
+    char* route = malloc(sizeof(char)*256);
+    memset(route, '\0', sizeof(route));
+    char next;
+    int count = 0;
+    char* prefix = "ROOM NAME:";
+
+    while(1){
+        fgets(line, sizeof(line), fd);
+        prefix = strtok(line, ":");
+        word = strtok(NULL, ":");
+
+        if(strcmp(prefix, "ROOM TYPE") != 0){
+            word[strcspn(word, "\n")] = 0;
+            strcat(route, word);
+            strcat(route, ",");
+        } else {
+            strcat(route, "#");
+            next = route[count];
+            while(next != '#'){
+                count++;
+                next = route[count];
+            }
+
+            route[count-1] = '.';
+            break;
+
+        }
+    }
+    printf("return route: %s\n", route);
+    return route;
 }
