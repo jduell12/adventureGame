@@ -116,6 +116,7 @@ void game(char* path){
     //makes the start room to the current room
     strcpy(currRoom, start);
 
+    do{
 
         strcpy(currRoom, getCurrRoom(fd));
 
@@ -123,28 +124,17 @@ void game(char* path){
 
         roomT = strtok(currConnec, "#");
         roomT = strtok(NULL, "#");
-    
-        printf("CURRENT LOCATION:%s\n", currRoom);
-        printf("POSSIBLE CONNECTIONS:%s\n", currConnec);
+
+        if(strncmp("END_ROOM", roomT, sizeof(roomT)) == 0){
+            break;
+        }
+
+        printf("CURRENT LOCATION: %s\n", currRoom);
+        printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
         printf("WHERE TO? >");
         scanf("%s", nextRoom);
 
-
-    // while(strncmp("END_ROOM", roomT, sizeof(roomT)) != 0){
-    //     printf("top of while\n");
-
-        // strcpy(currRoom, getCurrRoom(fd));
-        // printf("currRoom: %s\n", currRoom);
-
-        // strcpy(currConnec, getCurrConnec(fd));
-        // printf("currConnec: %s\n", currConnec);
-
-        // roomT = strtok(currConnec, "#");
-        // roomT = strtok(NULL, "#");
-
-        // if(strncmp("END_ROOM", roomT, sizeof(roomT)) == 0){
-        //     break;
-        // }
+        roomT = "END_ROOM";
 
         // do{
         // printf("CURRENT LOCATION: %s\n", currRoom);
@@ -157,7 +147,7 @@ void game(char* path){
         // }
 
         // }while(error == 1);
-    //}
+    }while(strncmp("END_ROOM", roomT, sizeof(roomT)) != 0);
 
 
 }
@@ -189,7 +179,7 @@ char* getStart(char* rooms[7], char* dirName){
 
         while((read = getline(&line, &len, file_descriptor)) != -1){
             line[strcspn(line, "\n")] = 0;
-            if(!strcmp(line, "ROOM TYPE: START_ROOM")){
+            if(!strcmp(line, "ROOM TYPE:START_ROOM")){
                 start = strcat(start, roomName);
                 return start;
             }
@@ -233,7 +223,7 @@ char* getCurrConnec(FILE *fd){
         if(strcmp(prefix, "ROOM TYPE") != 0){
             word[strcspn(word, "\n")] = 0;
             strcat(route, word);
-            strcat(route, ",");
+            strcat(route, ", ");
         } else {
             word[strcspn(word, "\n")] = 0;
             strcat(route, "#");
@@ -244,7 +234,7 @@ char* getCurrConnec(FILE *fd){
                 next = route[count];
             }
 
-            route[count-1] = '.';
+            route[count-2] = '.';
             route[count] = '#';
             break;
 
