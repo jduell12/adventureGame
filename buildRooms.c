@@ -38,24 +38,11 @@ int main(void){
     sprintf(makeDir,"mkdir duellje.rooms.%d", randomNum);
     system(makeDir);
 
-    //enters the new directory
+    //gets the newest directory
     char* latestRoomDirectory = findNewestDirectory(".", DIR_PREFIX);
 
     //creates the graph of the rooms
     struct AM** graph = createRooms();
-
-    struct Node* cur = NULL;
-    for(int i = 0; i < 7; i++){
-        printf("%d: ", graph[i]->room);
-        cur = graph[i]->list;
-        if(cur != NULL){
-            for(int j = 0; j < graph[i]->numConnections; j++){
-                printf("%d, ", cur->room);
-                cur = cur-> next;
-            }
-            printf("\n");
-        }
-    }
 
     //creates the room files
     createRoomFiles(graph, latestRoomDirectory);
@@ -157,33 +144,36 @@ void createRoomFiles(struct AM** graph, char* directoryName){
         write(file_descriptor, message, strlen(message));
 
         //writes the connections to the room file
+        int count = 1;
         cur = graph[i]->list;
         if(cur != NULL){
             for(int i = 0; i < graph[i]->numConnections; i++){
                 while(cur != NULL){
                 char* connection = malloc(15 + strlen(rooms[cur->room]) + 1);
                 char number[50];
-                sprintf(number, "%d", i+1);
+                sprintf(number, "%d", count);
                 strcpy(connection, "\nCONNECTION ");
                 strcat(connection, number);
-                strcat(connection, ": ");
+                strcat(connection, ":");
                 strcat(connection, rooms[cur->room]);
 
                 write(file_descriptor, connection, strlen(connection));
                 cur = cur->next;
+
+                count++;
                 }
             }
         }
         //writes the room type to the file
         if(roomCount == 0){
-            char roomType[] =  "\nROOM TYPE: START_ROOM";
+            char roomType[] =  "\nROOM TYPE:START_ROOM\n";
             write(file_descriptor, roomType, strlen(roomType)); 
             
         } else if(roomCount == 6){
-            char roomType[] =  "\nROOM TYPE: END_ROOM";
+            char roomType[] =  "\nROOM TYPE:END_ROOM\n";
             write(file_descriptor, roomType, strlen(roomType)); 
         } else {
-            char roomType[] =  "\nROOM TYPE: MID_ROOM";
+            char roomType[] =  "\nROOM TYPE:MID_ROOM\n";
             write(file_descriptor, roomType, strlen(roomType)); 
         }
 
@@ -211,16 +201,8 @@ struct AM** createRooms(){
             graph[roomCount] = roomInit;
             roomCount++;
             roomTaken[randRoom] = 1;
-
-            printf("Room taken #: %d\n", randRoom);
         }
     }
-
-    printf("Room taken array: \n");
-    for(int i = 0; i < 10; i++){
-        printf("%d ", roomTaken[i]);
-    }
-    printf("\n");
 
     createConnections(graph);
     return graph;
@@ -233,24 +215,17 @@ void createConnections(struct AM** graph){
     int numConn = 0;
     int randRoom = 0;
 
-    printf("connections rooms array: \n");
-
     for(int i = 0; i < 7; i++){
         rooms[i] = graph[i]->room;
-        printf("%d ", rooms[i]);
     }
-    printf("\n");
 
     struct Node* cur;
 
     for(int j = 0; j < 7; j++){
-        printf("in create Connections\n");
         numConn = graph[j]->numConnections;
-        printf("numConn: %d\n", numConn);
         while(numConn < 3){
             randNum = rand() % 7;
             randRoom = rooms[randNum];
-            printf("create connections other room: %d\n", randRoom);
             //checks if the connection is equal to itself or is already a connection
             if(randRoom != graph[j]->room && connect(graph[j], randRoom)){
                 graph[j]->numConnections++;
@@ -270,12 +245,8 @@ int connect(struct AM* row, int randRoom){
     struct Node* prev = NULL;
     struct Node* newNode = malloc(sizeof(struct Node));
 
-    printf("in connect - connecting room #%d\n", row->room);
-    printf("second Room: %d\n", randRoom);
-
     //checks if this is the first link in the list
     if(cur == NULL){
-        printf("first link\n");
         newNode->next = NULL;
         newNode->room = randRoom;
         row->list = newNode;
@@ -287,7 +258,6 @@ int connect(struct AM* row, int randRoom){
         if(cur->room == randRoom){
             return 0;
         }
-        printf("other links\n");
         prev = cur;
         cur = cur->next;
     }
