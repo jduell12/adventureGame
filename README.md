@@ -9,18 +9,18 @@ buildrooms.c: A program that will create a new directory with a specified name f
               The program will generate 7 room files from a possible list of 10 room names. 
               Each room file will have the following elements: 
                 * A room name
-                  -each room will have a unique name and each name will only be used for one room file
-                  -each name will have no more than 8 characters 
+                  *each room will have a unique name and each name will only be used for one room file
+                  *each name will have no more than 8 characters 
                 * A room type
-                  -the possible room types are : START_ROOM, END_ROOM and MID_ROOM
-                  -only one room may be the START_ROOM which is different from the END_ROOM
-                  -only one room may be the END_ROOM which is different from the START_ROOM
+                  *the possible room types are : START_ROOM, END_ROOM and MID_ROOM
+                  *only one room may be the START_ROOM which is different from the END_ROOM
+                  *only one room may be the END_ROOM which is different from the START_ROOM
                 * Outbound connections from the room
-                  -each room has at least 3 outbound connections to other rooms 
-                  -each room has no more than 6 outbound connections to other rooms
-                  -outbound connections are assigned randomly
-                  -no room can be connected to itself 
-                  -no room can have more than 1 connection to another room
+                  *each room has at least 3 outbound connections to other rooms 
+                  *each room has no more than 6 outbound connections to other rooms
+                  *outbound connections are assigned randomly
+                  *no room can be connected to itself 
+                  *no room can have more than 1 connection to another room
              When this program is run and compiled no output is written to the terminal. 
              
 adventure.c: A program that represents an interface to the user. 
