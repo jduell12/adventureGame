@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #define _GNU_SOURCE
-#define DIR_PREFIX "duellje.rooms."
+#define DIR_PREFIX "rooms."
 
 char* findNewestDirectory(char* path, char* prefix);
 struct AM** createRooms();
