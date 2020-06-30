@@ -8,7 +8,7 @@ terminal.
 buildrooms.c: A program that will create a new directory with a specified name followed by a random number from 0 to 100,000.
               The program will generate 7 room files from a possible list of 10 room names. 
               Each room file will have the following elements: 
-                * A room name
+                - A room name
                   *each room will have a unique name and each name will only be used for one room file
                   *each name will have no more than 8 characters 
                 * A room type
