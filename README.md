@@ -5,7 +5,7 @@ These programs run an adventure game where the user starts in one room and must 
 In order to win and exit the game the user must reach the end room. This game is played using prompts in the 
 terminal. 
 
-buildrooms.c: <p>A program that will create a new directory with a specified name followed by a random number from 0 to 100,000.</p>
+<h1>buildrooms.c:</h1> <p>A program that will create a new directory with a specified name followed by a random number from 0 to 100,000.</p>
               <p>The program will generate 7 room files from a possible list of 10 room names. </p>
               <p>Each room file will have the following elements: </p>
                 <ul>
@@ -28,9 +28,10 @@ buildrooms.c: <p>A program that will create a new directory with a specified nam
                 </ul>
              <p>When this program is run and compiled no output is written to the terminal. </p>
              
-adventure.c: A program that represents an interface to the user. 
-             It lists the current room the user is in, the possible connections and prompts for a new room name.
-             If the user enters a name different from the possible connections list (even if capitalization is different but spelling is the same) the program prompts the user to re-enter a room name.
-             The program keeps tracks of the number of steps the user takes as well as the path the user takes through the rooms.
-             Once the user reaches the end room the program writes a congratulatory message to the terminal and tells the user how many steps they took and what their path through the rooms was.
-             Once the game has exited the new directory will NOT be deleted by the program. 
+<h1>adventure.c:</h1>
+<p>A program that represents an interface to the user. <p>
+             <p>It lists the current room the user is in, the possible connections and prompts for a new room name.</p>
+             <p>If the user enters a name different from the possible connections list (even if capitalization is different but spelling is the same) the program prompts the user to re-enter a room name.</p>
+             <p>The program keeps tracks of the number of steps the user takes as well as the path the user takes through the rooms.</p>
+             <p>Once the user reaches the end room the program writes a congratulatory message to the terminal and tells the user how many steps they took and what their path through the rooms was.</p>
+             <p>Once the game has exited the new directory will <bold>NOT</bold> be deleted by the program. </p>
