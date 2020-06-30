@@ -16,6 +16,7 @@ void game(char* path);
 char* getStart(char* rooms[7], char* dirName);
 char* getCurrRoom(FILE* fd);
 char* getCurrConnec(FILE* fd);
+int checkIfValid(char nextRoom[], char currConnection[]);
 
 int main(void){
     //gets the newest directory
@@ -76,6 +77,7 @@ void game(char* path){
     char nextRoom[30];
     char *roomT;
     int error;
+    char passPath[256];
 
     //opens the directory and copies the room names into the rooms array
     DIR* currDir = opendir(path);
@@ -96,7 +98,8 @@ void game(char* path){
         rooms[i] = files[i];
     }
 
-    char* start = getStart(rooms, path);
+    strcpy(passPath, path);
+    char* start = getStart(rooms, passPath);
     
     //opens the start room file
     char *filePath = malloc(strlen(path) + strlen(start)+2);
@@ -107,7 +110,6 @@ void game(char* path){
 
     //checks that the file open correctly
     if(fd == NULL){
-        printf("in game\n");
         printf("open() failed on %s\n", filePath);
         perror("Error");
         exit(1);
@@ -115,9 +117,10 @@ void game(char* path){
 
     //makes the start room to the current room
     strcpy(currRoom, start);
+    char newPath[256];
+    strcpy(newPath, "");
 
     do{
-
         strcpy(currRoom, getCurrRoom(fd));
 
         strcpy(currConnec, getCurrConnec(fd));
@@ -134,19 +137,29 @@ void game(char* path){
         printf("WHERE TO? >");
         scanf("%s", nextRoom);
 
-        roomT = "END_ROOM";
+        error = checkIfValid(nextRoom, currConnec);
+        while(error == 0){
+            if(error == 0){
+                printf("\n HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN \n");
+            }
+            printf("CURRENT LOCATION: %s\n", currRoom);
+            printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
+            printf("WHERE TO? >");
+            scanf("%s", nextRoom);
+            error = checkIfValid(nextRoom, currConnec);
+        };
+        
+        strcpy(newPath, path);
+        strcat(newPath, nextRoom);
+        fclose(fd);
+        fd = fopen(newPath, "r");
 
-        // do{
-        // printf("CURRENT LOCATION: %s\n", currRoom);
-        // printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
-        // printf("WHERE TO? >");
-        // scanf("%s", nextRoom);
-        // error = checkIfValid(nextRoom, currConnec);
-        // if(error == 1){
-        //     printf("\n HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN \n");
-        // }
-
-        // }while(error == 1);
+        if(fd == NULL){
+            printf("open() failed on %s\n", filePath);
+            perror("Error");
+            exit(1);
+        }
+        
     }while(strncmp("END_ROOM", roomT, sizeof(roomT)) != 0);
 
 
@@ -241,4 +254,25 @@ char* getCurrConnec(FILE *fd){
         }
     }
     return route;
+}
+
+//returns 1 if the word matches a connection and 0 if the word doesn't
+int checkIfValid(char nextRoom[], char currConnection[]){
+    char *word = NULL;
+    char copyConnection[200];
+
+    strcpy(copyConnection, currConnection);
+
+    //separates into words based on spaces, commas or periods 
+    word = strtok(copyConnection, " ,.");
+
+    while(word != NULL){
+        //returns the word if it matches a word in the connection list
+        if(strncmp(nextRoom, word, sizeof(nextRoom)) == 0){
+            return 1;
+        }
+        word = strtok(NULL, " ,.");
+    }
+    //returns empty string if word doesn't match
+    return 0;
 }
