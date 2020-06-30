@@ -18,6 +18,11 @@ char* getCurrRoom(FILE* fd);
 char* getCurrConnec(FILE* fd);
 int checkIfValid(char nextRoom[], char currConnection[]);
 
+/*
+    NEED TO: 
+    Trying to go to an incorrect location does not increment the path history or the step count. Once the user has reached the End Room, the game should indicate that it has been reached. It should also print out the path the user has taken to get there (this path should not include the start room), the number of steps taken (not the number of rooms visited, which would be one higher because of the start room), a congratulatory message, and then exit
+*/
+
 int main(void){
     //gets the newest directory
     char* latestRoomDirectory = findNewestDirectory(".", DIR_PREFIX);
@@ -69,15 +74,16 @@ char* findNewestDirectory(char* path, char* prefix){
 void game(char* path){
     char *files [9];
     FILE *fd;
-    int numMoves = 0;
+    int steps = 0;
     char currRoom[20];
     char currConnec[256];
     memset(currConnec, '\0', sizeof(currConnec));
-    char roomPath[100];
+    char roomPath[256];
     char nextRoom[30];
     char *roomT;
     int error;
     char passPath[256];
+    char *room;
 
     //opens the directory and copies the room names into the rooms array
     DIR* currDir = opendir(path);
@@ -136,23 +142,33 @@ void game(char* path){
         printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
         printf("WHERE TO? >");
         scanf("%s", nextRoom);
+        printf("\n");
 
         error = checkIfValid(nextRoom, currConnec);
         while(error == 0){
             if(error == 0){
-                printf("\n HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN \n");
+                printf("HUH? I DON'T UNDERSTAND THAT ROOM. TRY AGAIN \n \n");
             }
             printf("CURRENT LOCATION: %s\n", currRoom);
             printf("POSSIBLE CONNECTIONS: %s\n", currConnec);
             printf("WHERE TO? >");
             scanf("%s", nextRoom);
+            printf("\n");
             error = checkIfValid(nextRoom, currConnec);
         };
         
         strcpy(newPath, path);
         strcat(newPath, nextRoom);
+        //closes previous room file
         fclose(fd);
+        //opens new room file
         fd = fopen(newPath, "r");
+
+        //adds the room picked by the user to the roomPath string
+        strcat(roomPath, nextRoom);
+        strcat(roomPath, " ");
+        steps++;
+        
 
         if(fd == NULL){
             printf("open() failed on %s\n", filePath);
@@ -161,6 +177,15 @@ void game(char* path){
         }
         
     }while(strncmp("END_ROOM", roomT, sizeof(roomT)) != 0);
+
+    printf("YOU HAVE FOUND THE END ROOM CONGRATUALTIONS!\n");
+    printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", steps);
+
+    room = strtok(roomPath, " ");
+    while(room != NULL){
+        printf("%s\n", room);
+        room = strtok(NULL, " ");
+    }
 
 
 }
